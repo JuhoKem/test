@@ -1,0 +1,10 @@
+// kun käytät paikallisesti, varmista että portti on oikea, eli 3000 tai 3001
+POST http://localhost:3001/api/blogs
+Content-Type: application/json
+
+{
+    "title": "Koodaajan käsikirja",
+    "author": "Juho Kemppainen",
+    "url": "www.fullstackopen.fi",
+    "likes": 1000
+}
