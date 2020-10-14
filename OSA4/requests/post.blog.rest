@@ -3,8 +3,8 @@ POST http://localhost:3001/api/blogs
 Content-Type: application/json
 
 {
-    "title": "Koodaajan käsikirja",
-    "author": "Juho Kemppainen",
-    "url": "www.fullstackopen.fi",
+    "title": "Kokeillaan lisätä muistiinpano",
+    "author": "John",
+    "url": "www.success.com",
     "likes": 1000
 }
