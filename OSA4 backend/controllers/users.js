@@ -6,7 +6,7 @@ const User = require('../models/user')
 
 // GET
 usersRouter.get('/', async (request, responce) => {
-    const allUsers = await User.find({}).populate('blogs')
+    const allUsers = await User.find({}).populate('blogs', {title: 1, author: 1, url: 1, likes: 1})
 
     responce.json(allUsers)
 })
@@ -37,6 +37,8 @@ usersRouter.post('/', async (request, response) => {
         name: body.name,
         passwordHash,
     })
+
+    // TODO tähän pitäisi laittaa concat juttu, jotta saataisiin userin tiedot näkyville blogiin
 
     // tämä on sama kuin promisen palauttama .then metodikutsu
     const savedUser = await user.save()
