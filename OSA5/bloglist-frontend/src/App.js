@@ -23,6 +23,8 @@ const App = () => {
   // tämä on tehty, jotta selain muistaisi kirjautumisen, eikä logouttaisi sivun päivityksen yhteydessä
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedUser')
+    //console.log("loggedUserJSON --->>", loggedUserJSON)
+
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
       setUser(user)
@@ -129,14 +131,17 @@ const App = () => {
     event.preventDefault()
     console.log('logging in with', username, password);
 
+    
     try {
       const user = await loginService.login({
         username, password,
-      })
+    })
+    //console.log('USER INFO: ---> ', user)
 
       // tallentaa local storageen sisääkirjautuneen käyttäjän tiedot, kuten token, käyttäjätunnus, nimi jne..
       window.localStorage.setItem('loggedUser', JSON.stringify(user))
 
+      blogService.setToken(user.token)
       setUser(user)
       setUsername('')
       setPassword('')
@@ -159,68 +164,4 @@ const App = () => {
 
 export default App
 
-
-/*
-      <form onSubmit={handleLogin}>
-        <div>
-          Username
-            <input type="text" value={username} name="Username" 
-            onChange={({ target }) => setUsername(target.value)}
-            /> 
-        </div>
-        <div>
-          Password
-            <input type="password" value={password} name="Password"
-            onChange={({ target }) => setPassword(target.value)}
-            />
-        </div>
-        <button type="submit"> Login </button>
-      </form>
-*/
-
 // 5.1 - 5.3
-
-
-/*
-
-  const blogForm = () => (
-    <div>
-      <form onSubmit={logoutHandle}>
-      <h2> Blogs </h2>
-      <p> {user.name} logged in <button type="submit"> Logout </button> </p>
-      </form>
-<form onSubmit={addBlog}>
-      <h2>Create new blog</h2>
-      
-      Title: <input 
-              type='text' 
-              value={newBlog.author} 
-              onChange={event => setNewBlog({ ...newBlog, author: event.target.value})} 
-            /> <br/>
-
-      Author: <input 
-              type='text' 
-              value={newBlog.title} 
-              onChange={event => setNewBlog({ ...newBlog, title: event.target.value})}
-            /> <br/>
-
-      URL: <input 
-              type='text' 
-              value={newBlog.url} 
-              onChange={event => setNewBlog({ ...newBlog, url: event.target.value})}
-            /> <br/>
-            
-
-      <button type="submit"> Create </button> <br/> <br/>
-
-      <h3>Author is: {newBlog.author}</h3>
-      <h3>Title is: {newBlog.title}</h3>
-      <h3>URL is: {newBlog.url}</h3>
-      <h3>JSON is: {JSON.stringify(newBlog)}</h3>
-      
-      {blogs.map(blog => <Blog key={blog.id} blog={blog} /> )}
-
-    </form></div>
-  )
-
-*/
