@@ -2,16 +2,21 @@ import React, { useState, useEffect } from 'react'
 import Blog from './components/Blog'
 import blogService from './services/blogs'
 import loginService from './services/login'
+import BlogForm from './components/BlogForm'
+import Login from './components/Login'
 
-// käynnistys nps start OSA5/bloglist-frontend-kansiossa
+// käynnistys nps start OSA5/bloglist-frontend/ -kansiossa
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
-  const [newBlog, setNewBlog] = useState({title: '', author: '', url:''}) // määritellään uusi blogiobjekti
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null) // sisältää onnistuneesti kirjautuneen käyttäjän tiedot ja token
-  const [errorMessage, setErrorMessage] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)  // välittää viestin --> notification.js
+  const [errorColor, setErrorColor] = useState('')        // välittää värin --> notification.js
+  const [blogVisible, setBlogVisible] = useState(false)
+
+  const sortedBlogs = [...blogs.sort((a, b) => a.likes - b.likes).reverse()] // järjestetään blogit suurusjärjestyksessä likejen määrän perusteella
 
   // By using this Hook, you tell React that your component needs to do something after render
   useEffect(() => {
@@ -32,104 +37,10 @@ const App = () => {
     }
   }, [])
 
-  // uuden blogin lisäys
-  const addBlog = (event) => {
-    //event.preventDefault()  <-- tämä kommentteihin, jos haluaa, että input tyhjenee
-    console.log('New Blog:', newBlog);
-
-    blogService
-      .create(newBlog)
-      .then(returnedBlog => {
-        setBlogs(blogs.concat(returnedBlog))
-        setNewBlog('')
-      })
-
-  }
-
-  // uloskirjautumisen tapahtumakäsittelijä --> pyyhitään "local storage" tokenista
-  const logoutHandle = () => {
-    window.localStorage.clear()
-  }
-
-  // kontrolloitu tapahtumakäsittelijä inputille
-  const handleBlogChange = (event) => {
-    event.preventDefault()
-
-    // näin saadaan päivitettyä useampi arvo objektissa. Notaatio ...newBlog ensin kopioi muut arvot ja sitten asettaa uudet arvot
-    // event.target.name <-- viittaa input name-kenttään. Näin se osaa asettaa oikean arvoin oikeaan paikkaan
-    setNewBlog({
-        ...newBlog,
-        [event.target.name]: event.target.value
-    })
-  }
-// ********************************************************************************
-  // onChange vastaa siitä, että input-kentän arvo päivittyy tilaan esim. user-tilaan
-  const loginForm = () => (
-    
-    <form onSubmit={handleLogin}>
-      <h2>Login</h2>
-      <div>
-        Username
-        <input
-        type="text"
-        value={username}
-        name="Username"
-        onChange={({ target }) => setUsername(target.value)}
-        />
-      </div>
-      <div>
-      Password
-        <input
-        type="password"
-        value={password}
-        name="Password"
-        onChange={({ target }) => setPassword(target.value)}
-        />
-      </div>
-      <button type="submit"> Login </button>
-
-    </form>
-  )
-  
-  // HUOM! input-kentissä luodaan uusi objekti. ...newBlog-notaatio tarkoittaa, että se kopioi ensin kaikki objektin
-  // olemassa olevat tiedot ja sitten ylikirjoittaa pilkun jälkeen tulevan key-value parin.
-  // Jos ...newBlog ei ole, häviää objektin kaikki muut kentätä
-  const blogForm = () => (
-    <form>
-      <h2> Blogs </h2>
-      <p> {user.name} logged in <button onClick={logoutHandle}> Logout </button> </p>
-
-      <h2>Create new blog</h2>
-      
-      Title: <input 
-              type='text' 
-              name="title"
-              onChange={handleBlogChange} 
-            /> <br/>
-
-      Author: <input 
-              type='text' 
-              name="author"
-              onChange={handleBlogChange}
-            /> <br/>
-
-      URL: <input 
-              type='text' 
-              name="url"
-              onChange={handleBlogChange}
-            /> <br/>
-            
-
-      <button onClick={addBlog}> Create </button> <br/> <br/>
-
-      {blogs.map(blog => <Blog key={blog.id} blog={blog} /> )}
-
-    </form>
-  )
-// ************************************************************************************
+  // tapahtumakäsittelijä loginille
   const handleLogin = async (event) => {
     event.preventDefault()
-    console.log('logging in with', username, password);
+    //console.log('logging in with', username, password);
 
     
     try {
@@ -146,22 +57,61 @@ const App = () => {
       setUsername('')
       setPassword('')
     } catch (exception) {
-      setErrorMessage("moi")
-      setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
-    
-    }
+        setErrorMessage("Wrong username or password")
+        setErrorColor('not ok')
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
+      }
   }
 
+  // uloskirjautumisen tapahtumakäsittelijä --> pyyhitään "local storage" tokenista
+  const logoutHandle = () => {
+    window.localStorage.clear()
+    setUser(null)
+  }
+
+  // tapahtumakäsittelijä, joka vastaa blogi formin näkyvyydestä
+  const blogForm = () => {
+
+    const hideWhenVisible = { display: blogVisible ? 'none' : ''}
+    const showWhenVisible = { display: blogVisible ? '' : 'none'}
+
+    return(
+      <div>
+        <div style={hideWhenVisible}>
+          <button onClick={() => setBlogVisible(true)}> New blog </button>
+        </div>
+        <div style={showWhenVisible}>
+          <BlogForm errorMessage={errorMessage} errorColor={errorColor} blogs={blogs}
+                    setBlogs={setBlogs} setErrorColor={setErrorColor} setErrorMessage={setErrorMessage}/>
+
+          <button onClick={() => setBlogVisible(false)}> Hide </button>
+        </div>
+        {sortedBlogs.map(blog => <Blog key={blog.id} blog={blog} setBlogs={setBlogs} blogs={blogs} user={user}/> )}
+      </div>
+    )
+      
+  }
+ 
   return (
     <div>
-      
-      { user === null ? loginForm() : blogForm() }
+      { user === null ?
+         <Login password={password} handleLogin={handleLogin} errorMessage={errorMessage} errorColor={errorColor} username={username} setUsername={setUsername} setPassword={setPassword}/> :
+        <div>
+          <h2> Blogs </h2>
+          <p> {user.name} logged in <button onClick={logoutHandle}> Logout </button> </p>
+          {blogForm()} 
+        </div>
+      }
     </div>
   )
 }
 
 export default App
 
-// 5.1 - 5.3
+// 5.1 - 5.4
+// 5.5 - 5.10
+// 5.11 - 5.12
+// 5.13 - 5.15
+// 

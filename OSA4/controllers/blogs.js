@@ -13,6 +13,7 @@ blogsRouter.get('/', async (request, response) => {
   // että olemme määritelleet viitteiden "tyypit" olioiden Mongoose-skeemaan ref-kentän avulla:
   const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 })
 
+  
   response.json(blogs)
 
 })
@@ -72,12 +73,14 @@ blogsRouter.delete('/:id', async (request, response) => {
 
 // PUT
 blogsRouter.put('/:id', async (request, response) => {
+  //console.log('PUT REQUEST ---> ', request.body);
+  const body = request.body
 
   const upDated = {
-    "title": "Putin",
-    "author": "Trump",
-    "url": "www.updated.com",
-    "likes": 1111111
+    "title": body.title,
+    "author": body.author,
+    "url": body.url,
+    "likes": body.likes
   }
 
   await Blog.findByIdAndUpdate(request.params.id, upDated)
